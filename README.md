@@ -1,6 +1,6 @@
 # Client / Server Model document
 
-This document describes the Client/Server Model, allowing us to make GitHub Actions secure.
+This document describes the Client/Server Model, making GitHub Actions secure.
 
 CI is powerful, but it's dangerous at the same time.
 Generally, CI requires strong permissions and it can run any commands.
