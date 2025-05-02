@@ -15,7 +15,7 @@ Instead of granting strong permissions to workflows, workflows send requests to 
 You grant strong permissions to servers, but you can protect servers by restricting people who can modify them.
 
 We implement servers using GitHub Actions.
-GitHub Actions is much easier to implement and maintain servers than other tools such as AwS Lambda, Google Cloud Function, k8s, and so on.
+GitHub Actions is much easier to implement and maintain servers than other tools such as AWS Lambda, Google Cloud Function, k8s, and so on.
 
 ## How To Trigger Server workflows
 
@@ -35,7 +35,7 @@ Generally, `repository_dispatch` event is used to trigger workflows by GitHub AP
 But `repository_dispatch` requires `contents:write` permission, which is too strong.
 It's undesirable to grant the `contents:write` permission to client workflows.
 
-Instead, we use `labels:created` event because it requires `issues:write` permission, which is hard to abuse.
+Instead, we use `labels:created` event because it requires only `issues:write` permission, which is hard to abuse.
 To create labels in other repositories, GitHub Actions tokens are unavailable.
 So clients require GitHub Apps with `issues:write` permissions.
 
@@ -44,7 +44,7 @@ But if you need to pass larger parameters, you should use GitHub Actions Artifac
 
 ### 2. `workflow_run:complete`
 
-`labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the permission if pull request come from fork repositories.
+`labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the write permission if pull request come from fork repositories.
 In that case, `workflow_run:complete` event is useful as it doesn't need write permissions.
 
 `workflow_run:complete` has some drawback compared with `labels:created`:
