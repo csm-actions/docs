@@ -8,15 +8,14 @@ Our Client/Server Model is the architecture making GitHub Actions secure.
 You can protect server workflows with strong permissions and credentials by separating them from client workflows.
 You can implement and maintain the model by GitHub Actions easily without hosting and maintaining any server application.
 
-![client-server-model-2 drawio](https://github.com/user-attachments/assets/6ead5ee3-ea0e-49a2-8308-25aecdd83088)
-
-Flow:
+![image](https://github.com/user-attachments/assets/e121e269-b072-45ca-b512-8346f7554175)
 
 Both client workflows and server workflows are merely GitHub Actions Workflows.
+The flow is simple:
 
-1. A client workflow requests an action to a server workflow
-2. A server workflow validates the request
-3. A server workflow does the requested action
+1. A client workflow requests actions to a server workflow
+1. A server workflow validates the request
+1. A server workflow does requested actions
 
 ## Features
 
