@@ -75,6 +75,12 @@ But if you need to pass larger parameters, you should use GitHub Actions Artifac
 Label names must be unique, so when creating labels we add a random suffix to label names to make them unique.
 We remove created labels immediately because we create them only for triggering server workflows and there is no reason to keep them.
 
+#### Why not `repository_dispatch`?
+
+Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
+But `repository_dispatch` requires `contents:write` permission, which is too strong.
+So we use `labels:created` event instead.
+
 ### 2. `workflow_run:complete`
 
 `labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the write permission if pull request come from fork repositories.
