@@ -72,6 +72,9 @@ So clients require GitHub Apps with `issues:write` permissions.
 `labels:created` event can pass small parameters to server workflows via label name and description.
 But if you need to pass larger parameters, you should use GitHub Actions Artifacts.
 
+Label names must be unique, so when creating labels we add a random suffix to label names to make them unique.
+We remove created labels immediately because we create them only for triggering server workflows and there is no reason to keep them.
+
 ### 2. `workflow_run:complete`
 
 `labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the write permission if pull request come from fork repositories.
@@ -85,8 +88,52 @@ In that case, `workflow_run:complete` event is useful as it doesn't need write p
 - `workflow_run` workflows are triggered even if they are unnecessary
 - Client workflows need to use GitHub Actions Artifacts or something to pass parameters to `workflow_run`.
 
+## Protect server workflows
+
+You must manage server workflows securely.
+For instance, granting the write permission of server repositories to only system administrators.
+
+## Secret Management
+
+You must manage secrets securely.
+Otherwise, this model has no meaning.
+
+For instance, you must not share secrets using GitHub Organizations Secrets widely.
+
+There are several ways to manage secrets:
+
+- [Use GitHub Environment Secret](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#deployment-protection-rules)
+  - Restrict the branch
+- Use a secret manager such as AWS Secrets Manager and [restrict the access by OIDC claims (repository, event, branch, workflow, etc)](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
+
+## Validation
+
+For security, it's very important for server workflows to validate requests from clients.
+
+## Error Notification
+
+When any error happen in server workflows, server workflows notify it to clients. In case of pull request workflows, server workflows post comments to pull requests.
+
+## Compared with other tools like AWS Lambda
+
+You can implement server using tools like AWS Lambda, Google Cloud Function, k8s, and so on instead of GitHub Actions.
+
+But if you use these tools, you need to consider SDLC of the server application.
+
+- develop
+- authentication
+- deploy
+- monitoring
+- logging
+- etc
+
+On the other hand, GitHub Actions may be more expensive and slower than them.
+And it's difficult for server workflows to return any response to client workflows.
+
+So there are both pros and cons, but we prefer server workflows as it's easy to develop and maintain.
+
 ## Limitation
 
-Implementing servers by GitHub Actions has some limitation:
+Implementing servers by GitHub Actions has some limitation, so this model doesn't meet some needs.
 
 - When client workflows trigger server workflows, client workflows can't receive response from server workflows
