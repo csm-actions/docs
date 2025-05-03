@@ -133,9 +133,3 @@ On the other hand, GitHub Actions may be more expensive and slower than them.
 And it's difficult for server workflows to return any response to client workflows.
 
 So there are both pros and cons, but we adopt server workflows as it's easy to develop and maintain.
-
-## Limitation
-
-Implementing servers by GitHub Actions has some limitation, so this model doesn't meet some needs.
-
-- When client workflows trigger server workflows, client workflows can't receive response from server workflows
