@@ -68,8 +68,7 @@ Client workflows create GitHub Issue labels, then server workflows are triggered
 By separating server repositories and workflows from client repositories and workflows, you can protect server workflows.
 
 We trigger server workflows by `labels:created` event because it requires only `issues:write` permission, which is hard to abuse.
-To create labels in other repositories, GitHub Actions tokens are unavailable.
-So clients require GitHub Apps with `issues:write` permissions.
+GitHub Actions tokens can't trigger new workflows runs, so clients require GitHub Apps with `issues:write` permissions.
 
 `labels:created` event can pass small parameters to server workflows via label name and description.
 But if you need to pass larger parameters, you should use GitHub Actions Artifacts.
