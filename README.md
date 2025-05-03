@@ -1,6 +1,33 @@
-# Client / Server Model document
+# Document of our Client/Server Model
 
-This document describes the Client/Server Model, making GitHub Actions secure.
+This document describes our Client/Server Model, making GitHub Actions secure.
+
+## Overview
+
+Our Client/Server Model is the architecture making GitHub Actions secure.
+You can protect server workflows with strong permissions and credentials by separating them from client workflows.
+You can implement and maintain the model by GitHub Actions easily without hosting and maintaining any server application.
+
+![client-server-model-2 drawio](https://github.com/user-attachments/assets/6ead5ee3-ea0e-49a2-8308-25aecdd83088)
+
+Flow:
+
+Both client workflows and server workflows are merely GitHub Actions Workflows.
+
+1. A client workflow requests an action to a server workflow
+2. A server workflow validates the request
+3. A server workflow does the requested action
+
+## Features
+
+- 🛡 Secure
+  - You don't need to pass a GitHub App private key with strong permissions to GitHub Actions workflows on the client side
+  - You don't need to allow external services to access your code
+  - You can validate requests
+- 😊 Easy to maintain
+  - You don't need to host a server application
+
+## Background
 
 CI is powerful, but it's dangerous at the same time.
 Generally, CI requires strong permissions and it can run any commands.
