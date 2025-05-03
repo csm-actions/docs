@@ -54,6 +54,12 @@ There are two ways to trigger server workflows:
 On the other hand, `labels:created` requires the write permission, so it's unavailable in `pull_request` workflows triggred by pull requests from fork repositories.
 Instead, `workflow_run:complete` is available in public repositories.
 
+### Why not `repository_dispatch`?
+
+Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
+But `repository_dispatch` requires `contents:write` permission, which is too strong.
+So we use `labels:created` event instead.
+
 ### 1. `labels:created`
 
 ![client-server-model drawio](https://github.com/user-attachments/assets/fb85fd55-66a6-47b1-8b21-90ea0eb7102b)
@@ -61,11 +67,7 @@ Instead, `workflow_run:complete` is available in public repositories.
 Client workflows create GitHub Issue labels, then server workflows are triggered by `labels:created` event.
 By separating server repositories and workflows from client repositories and workflows, you can protect server workflows.
 
-Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
-But `repository_dispatch` requires `contents:write` permission, which is too strong.
-It's undesirable to grant the `contents:write` permission to client workflows.
-
-Instead, we use `labels:created` event because it requires only `issues:write` permission, which is hard to abuse.
+We trigger server workflows by `labels:created` event because it requires only `issues:write` permission, which is hard to abuse.
 To create labels in other repositories, GitHub Actions tokens are unavailable.
 So clients require GitHub Apps with `issues:write` permissions.
 
@@ -74,12 +76,6 @@ But if you need to pass larger parameters, you should use GitHub Actions Artifac
 
 Label names must be unique, so when creating labels we add a random suffix to label names to make them unique.
 We remove created labels immediately because we create them only for triggering server workflows and there is no reason to keep them.
-
-#### Why not `repository_dispatch`?
-
-Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
-But `repository_dispatch` requires `contents:write` permission, which is too strong.
-So we use `labels:created` event instead.
 
 ### 2. `workflow_run:complete`
 
