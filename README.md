@@ -40,7 +40,7 @@ Clients are GitHub Actions Workflows.
 Instead of granting strong permissions to workflows, workflows send requests to the server, and the server validates and handles them.
 You grant strong permissions to servers, but you can protect servers by restricting people who can modify them.
 
-We implement servers using GitHub Actions.
+You can implement servers using GitHub Actions.
 GitHub Actions is much easier to implement and maintain servers than other tools such as AWS Lambda, Google Cloud Function, k8s, and so on.
 
 ## How To Trigger Server workflows
@@ -49,6 +49,10 @@ There are two ways to trigger server workflows:
 
 1. `labels:created`
 1. `workflow_run:complete`
+
+`labels:created` is useful in case you develop private repositories in teams.
+On the other hand, `labels:created` requires the write permission, so it's unavailable in `pull_request` workflows triggred by pull requests from fork repositories.
+Instead, `workflow_run:complete` is available in public repositories.
 
 ### 1. `labels:created`
 
