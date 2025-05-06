@@ -1,4 +1,4 @@
-# Document of our Client/Server Model
+# Client/Server Model for GitHub Actions
 
 This document describes our Client/Server Model, making GitHub Actions secure.
 
@@ -16,6 +16,14 @@ The flow is simple:
 1. A client workflow requests actions to a server workflow
 1. A server workflow validates the request
 1. A server workflow does requested actions
+
+## Actions
+
+We develop some actions based on this model:
+
+- [Securefix Action is GitHub Actions to fix code securely](https://github.com/csm-actions/securefix-action)
+- [Approve PR Action is GitHub Actions to approve pull requests securely](https://github.com/csm-actions/approve-pr-action)
+- [Update Branch Actions is GitHub Actions to update pull request branches securely](https://github.com/csm-actions/update-branch-action)
 
 ## Features
 
@@ -45,14 +53,16 @@ GitHub Actions is much easier to implement and maintain servers than other tools
 
 ## How To Trigger Server workflows
 
-There are two ways to trigger server workflows:
+There are several ways to trigger server workflows:
 
 1. `labels:created`
 1. `workflow_run:complete`
+1. `workflow_run:complete` => `labels:created`
 
 `labels:created` is useful in case you develop private repositories in teams.
 On the other hand, `labels:created` requires the write permission, so it's unavailable in `pull_request` workflows triggred by pull requests from fork repositories.
 Instead, `workflow_run:complete` is available in public repositories.
+You can also combine `workflow_run:complete` and `labels:created`, creating labels by `workflow_run:complete` workflows.
 
 ### Why not `repository_dispatch`?
 
@@ -88,6 +98,8 @@ In that case, `workflow_run:complete` event is useful as it doesn't need write p
   - It's hard to manage credentials if necessary
 - `workflow_run` workflows are triggered even if they are unnecessary
 - Client workflows need to use GitHub Actions Artifacts or something to pass parameters to `workflow_run`.
+
+To solve these drawback, you can also combine `workflow_run:complete` and `labels:created`.
 
 ## Protect server workflows
 
