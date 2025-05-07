@@ -86,6 +86,17 @@ But if you need to pass larger parameters, you should use GitHub Actions Artifac
 Label names must be unique, so when creating labels we add a random suffix to label names to make them unique.
 We remove created labels immediately because we create them only for triggering server workflows and there is no reason to keep them.
 
+#### Client GitHub App
+
+A client GitHub App is a GitHub App to create labels to a server repository to trigger a server workflow.
+
+- Deactivate Webhook
+- Permissions:
+  - `issues:write`: To create labels
+  - You shouldn't grant other permissions to this app
+- Installed Repositories: Install this app into the server repository and client repositories.
+- Private key management: You can share the private key widely using GitHub Organizations Secrets as this app has only `issues:write` permission
+
 ### 2. `workflow_run:complete`
 
 `labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the write permission if pull request come from fork repositories.
@@ -108,12 +119,10 @@ For instance, granting the write permission of server repositories to only syste
 
 ## Secret Management
 
-You must manage secrets securely.
+You must manage secrets used in server workflows securely.
 Otherwise, this model has no meaning.
-
-For instance, you must not share secrets using GitHub Organizations Secrets widely.
-
-There are several ways to manage secrets:
+For instance, you must not share them using GitHub Organizations Secrets widely.
+There are several ways to manage them securely:
 
 - [Use GitHub Environment Secret](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#deployment-protection-rules)
   - Restrict the branch
