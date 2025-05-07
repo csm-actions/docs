@@ -88,7 +88,7 @@ We remove created labels immediately because we create them only for triggering 
 
 #### Client GitHub App
 
-A client GitHub App is a GitHub App to create labels to a server repository to trigger a server workflow.
+A client GitHub App is a GitHub App to create labels in a server repository to trigger a server workflow.
 
 - Deactivate Webhook
 - Permissions:
