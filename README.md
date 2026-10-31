@@ -96,7 +96,8 @@ A client GitHub App is a GitHub App to create labels in a server repository to t
 - Permissions:
   - `issues:write`: To create labels
   - You shouldn't grant other permissions to this app
-- Installed Repositories: Install this app into the server repository and client repositories.
+- Installed Repositories: Install this app into only the server repository.
+  - You don't need to install it into client repositories, because client workflows create labels only in the server repository.
 - Private key management: You can share the private key widely using GitHub Organizations Secrets as this app has only `issues:write` permission
 
 ### 2. `workflow_run:complete`
