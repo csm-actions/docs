@@ -131,6 +131,16 @@ There are several ways to manage them securely:
   - Restrict the branch
 - Use a secret manager such as AWS Secrets Manager and [restrict the access by OIDC claims (repository, event, branch, workflow, etc)](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
 
+### GitHub App private keys
+
+You should manage GitHub App private keys with a key management service such as AWS KMS rather than GitHub Secrets or a secret manager.
+A private key never expires, so anyone who obtains it can create access tokens indefinitely.
+If you import the private key into AWS KMS and delegate only the JWT signing to KMS, workflows never read the private key, so it can't leak.
+Restrict the access to the KMS key by OIDC claims as well.
+
+You can create installation access tokens this way using [suzuki-shunsuke/create-github-app-token-aws-kms](https://github.com/suzuki-shunsuke/create-github-app-token-aws-kms).
+For the setup, see [the agent skill github-app-private-key-aws-kms](https://github.com/suzuki-shunsuke/agent-skills/blob/main/skills/github-app-private-key-aws-kms/SKILL.md).
+
 ## Validation
 
 For security, it's very important for server workflows to validate requests from clients.
