@@ -57,30 +57,76 @@ GitHub Actions is much easier to implement and maintain servers than other tools
 
 There are several ways to trigger server workflows:
 
+1. `workflow_dispatch` (recommended)
 1. `labels:created`
 1. `workflow_run:complete`
-1. `workflow_run:complete` => `labels:created`
+1. `workflow_run:complete` => `workflow_dispatch` or `labels:created`
 
-`labels:created` is useful in case you develop private repositories in teams.
-On the other hand, `labels:created` requires the write permission, so it's unavailable in `pull_request` workflows triggred by pull requests from fork repositories.
+`workflow_dispatch` and `labels:created` are useful in case you develop private repositories in teams.
+On the other hand, both of them require a GitHub App's private key in client workflows, which isn't available in `pull_request` workflows triggered by pull requests from fork repositories.
 Instead, `workflow_run:complete` is available in public repositories.
-You can also combine `workflow_run:complete` and `labels:created`, creating labels by `workflow_run:complete` workflows.
+You can also combine `workflow_run:complete` with `workflow_dispatch` or `labels:created`, triggering server workflows from `workflow_run:complete` workflows.
 
-### Why not `repository_dispatch`?
+GitHub Actions tokens can't trigger new workflow runs, so clients require a GitHub App to trigger server workflows.
+By separating server repositories and workflows from client repositories and workflows, you can protect server workflows.
 
-Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
-But `repository_dispatch` requires `contents:write` permission, which is too strong.
-So we use `labels:created` event instead.
+### 1. `workflow_dispatch`
 
-### 1. `labels:created`
+Client workflows run server workflows by [the workflow_dispatch API](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event).
+
+- Parameters are passed as workflow inputs
+- The API returns the server workflow run, so client workflows can output a link to it
+- No resource such as a label needs to be created and deleted just to trigger server workflows
+
+Client workflows specify a server workflow in the format `<owner>/<repo>/.github/workflows/<workflow file>@<branch or tag>`, the same format as `github.workflow_ref`.
+[`@csm-actions/dispatch`](https://jsr.io/@csm-actions/dispatch) is a JSR package for client actions to run server workflows this way.
+
+#### Client GitHub App
+
+A client GitHub App is a GitHub App to run server workflows.
+
+- Deactivate Webhook
+- Permissions:
+  - `actions:write`: To run server workflows
+  - You shouldn't grant other permissions to this app
+- Installed Repositories: Install this app into only the server repository.
+  - You don't need to install it into client repositories, because client workflows run workflows only in the server repository.
+- Private key management: You can share the private key widely using GitHub Organizations Secrets, as this app has only `actions:write` permission of the server repository
+
+#### Risks of `actions:write`
+
+`actions:write` of the server repository doesn't allow clients to change the server repository's code or read secrets, but it allows more than running workflows:
+
+- Disable and enable workflows (DoS of server workflows)
+- Cancel and re-run workflow runs
+- Delete workflow runs and logs
+- Delete artifacts and caches
+
+As the private key of the client GitHub App is shared widely, anyone who can write to a client repository should be assumed to be able to do these.
+We consider these acceptable as long as secrets are available only on the default branch of the server repository and the default branch is protected properly.
+
+#### Run server workflows only on the default branch
+
+Unlike `labels:created`, which always runs workflows on the default branch, `workflow_dispatch` lets clients choose any branch or tag of the server repository.
+If an old branch or tag has a vulnerable server workflow, it could be run.
+So server workflows must run only on the default branch:
+
+- Server actions fail if the event is `workflow_dispatch` and `github.ref` isn't the default branch. This check runs in the workflow on the dispatched ref, so it doesn't protect a branch or tag whose workflow doesn't have it. Use the following measures, which are enforced outside workflows, too
+- Restrict the deployment branches of the environment to the default branch
+- Restrict the access to secrets by OIDC claims. When the job uses an environment, the `sub` claim doesn't include the ref, so customize the subject claim to include `job_workflow_ref`, for instance
+
+`actions:write` also allows re-running server workflow runs.
+A re-run uses the workflow at the same commit as the original run, and both the deployment branch policy of the environment and `job_workflow_ref` see only the branch name.
+So when you fix a vulnerability of a server workflow, delete the server workflow runs from before the fix.
+
+### 2. `labels:created`
 
 ![client-server-model drawio](https://github.com/user-attachments/assets/fb85fd55-66a6-47b1-8b21-90ea0eb7102b)
 
 Client workflows create GitHub Issue labels, then server workflows are triggered by `labels:created` event.
-By separating server repositories and workflows from client repositories and workflows, you can protect server workflows.
 
-We trigger server workflows by `labels:created` event because it requires only `issues:write` permission, which is hard to abuse.
-GitHub Actions tokens can't trigger new workflows runs, so clients require GitHub Apps with `issues:write` permissions.
+It requires only `issues:write` permission, and the server workflow always runs on the default branch.
+But `workflow_dispatch` is more natural to trigger workflows, passes parameters more flexibly, and returns the workflow run, so we recommend `workflow_dispatch`.
 
 `labels:created` event can pass small parameters to server workflows via label name and description.
 But if you need to pass larger parameters, you should use GitHub Actions Artifacts.
@@ -90,8 +136,6 @@ We remove created labels immediately because we create them only for triggering 
 
 #### Client GitHub App
 
-A client GitHub App is a GitHub App to create labels in a server repository to trigger a server workflow.
-
 - Deactivate Webhook
 - Permissions:
   - `issues:write`: To create labels
@@ -100,12 +144,12 @@ A client GitHub App is a GitHub App to create labels in a server repository to t
   - You don't need to install it into client repositories, because client workflows create labels only in the server repository.
 - Private key management: You can share the private key widely using GitHub Organizations Secrets as this app has only `issues:write` permission
 
-### 2. `workflow_run:complete`
+### 3. `workflow_run:complete`
 
-`labels:created` requires `issues:write` permission, but `pull_request` workflows don't have the write permission if pull request come from fork repositories.
+`workflow_dispatch` and `labels:created` require a GitHub App's private key in client workflows, but `pull_request` workflows can't access secrets if pull requests come from fork repositories.
 In that case, `workflow_run:complete` event is useful as it doesn't need write permissions.
 
-`workflow_run:complete` has some drawback compared with `labels:created`:
+`workflow_run:complete` has some drawback compared with `workflow_dispatch` and `labels:created`:
 
 - You need to create server workflows per client repository
   - It's bothersome to maintain server workflows
@@ -113,7 +157,14 @@ In that case, `workflow_run:complete` event is useful as it doesn't need write p
 - `workflow_run` workflows are triggered even if they are unnecessary
 - Client workflows need to use GitHub Actions Artifacts or something to pass parameters to `workflow_run`.
 
-To solve these drawback, you can also combine `workflow_run:complete` and `labels:created`.
+To solve these drawback, you can also combine `workflow_run:complete` with `workflow_dispatch` or `labels:created`.
+
+### Why not `repository_dispatch`?
+
+Generally, `repository_dispatch` event is used to trigger workflows by GitHub API.
+But creating a `repository_dispatch` event requires `contents:write` permission of the server repository.
+It would let clients rewrite server workflows or push branches with malicious workflows, so the model would have no meaning.
+Also, the API doesn't return the workflow run.
 
 ## Protect server workflows
 
