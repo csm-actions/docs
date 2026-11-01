@@ -91,7 +91,8 @@ A client GitHub App is a GitHub App to run server workflows.
   - You shouldn't grant other permissions to this app
 - Installed Repositories: Install this app into only the server repository.
   - You don't need to install it into client repositories, because client workflows run workflows only in the server repository.
-- Private key management: You can share the private key widely using GitHub Organizations Secrets, as this app has only `actions:write` permission of the server repository
+- Private key management: Ideally, manage the private key with a key management service such as AWS KMS, so that it can't leak. See [GitHub App private keys](#github-app-private-keys). The client actions support it with the input `aws_kms_key_id`
+  - As this app has only `actions:write` permission of the server repository, sharing the private key widely using GitHub Organizations Secrets is also acceptable
 
 #### Risks of `actions:write`
 
@@ -102,7 +103,8 @@ A client GitHub App is a GitHub App to run server workflows.
 - Delete workflow runs and logs
 - Delete artifacts and caches
 
-As the private key of the client GitHub App is shared widely, anyone who can write to a client repository should be assumed to be able to do these.
+If the private key of the client GitHub App is shared widely, anyone who can write to a client repository should be assumed to be able to do these.
+Even if it's managed in AWS KMS, client workflows can use it, so anyone who can run a client workflow can do these.
 We consider these acceptable as long as secrets are available only on the default branch of the server repository and the default branch is protected properly.
 
 #### Run server workflows only on the default branch
@@ -142,7 +144,8 @@ We remove created labels immediately because we create them only for triggering 
   - You shouldn't grant other permissions to this app
 - Installed Repositories: Install this app into only the server repository.
   - You don't need to install it into client repositories, because client workflows create labels only in the server repository.
-- Private key management: You can share the private key widely using GitHub Organizations Secrets as this app has only `issues:write` permission
+- Private key management: Ideally, manage the private key with a key management service such as AWS KMS, so that it can't leak. See [GitHub App private keys](#github-app-private-keys)
+  - As this app has only `issues:write` permission of the server repository, sharing the private key widely using GitHub Organizations Secrets is also acceptable
 
 ### 3. `workflow_run:complete`
 
